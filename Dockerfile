@@ -20,9 +20,11 @@ LABEL maintainer="Antonio Musarra <antonio.musarra@gmail.com>" \
 # Apache ENVs
 ENV APACHE_SERVER_NAME cns.dontesta.it
 ENV APACHE_SERVER_ADMIN cns@dontesta.it
-ENV APACHE_SSL_CERTS cns-dontesta-it_crt.pem
-ENV APACHE_SSL_PRIVATE cns-dontesta-it_key.pem
-ENV APACHE_SSL_PORT 10443
+#ENV APACHE_SSL_CERTS cns-dontesta-it_crt.pem
+ENV APACHE_SSL_CERTS certificate.crt
+#ENV APACHE_SSL_PRIVATE cns-dontesta-it_key.pem
+ENV APACHE_SSL_PRIVATE private.key
+ENV APACHE_SSL_PORT 443
 ENV APACHE_LOG_LEVEL info
 ENV APACHE_SSL_LOG_LEVEL info
 ENV APACHE_SSL_VERIFY_CLIENT optional
@@ -69,6 +71,9 @@ COPY configs/openssl/openssl.cnf /etc/ssl/
 COPY configs/certs/*_crt.pem /etc/ssl/certs/
 COPY configs/certs/*_ca_bundle.pem /etc/ssl/certs/
 COPY configs/certs/*_key.pem /etc/ssl/private/
+#modifica michele 25.06.2021
+COPY configs/certs/*.crt /etc/ssl/certs/
+COPY configs/certs/*.key /etc/ssl/private/
 
 # Copy php samples script and other
 COPY configs/www/*.php /var/www/html/
@@ -77,6 +82,11 @@ COPY configs/www/css /var/www/html/css
 COPY configs/www/img /var/www/html/img
 COPY configs/www/js /var/www/html/js
 COPY configs/www/secure /var/www/html/secure
+#modifica michele aggiunta file verifica certificato ssl
+RUN mkdir  /var/www/html/.well-known
+RUN mkdir  /var/www/html/.well-known/pki-validation
+COPY configs/www/well-known/pki-validation/*.txt /var/www/html/.well-known/pki-validation/
+
 
 # Copy auto-update-gov-certificates scripts and entrypoint
 COPY scripts/auto-update-gov-certificates /auto-update-gov-certificates
@@ -101,6 +111,7 @@ RUN a2enmod ssl \
 
 # Expose Apache
 EXPOSE ${APACHE_SSL_PORT}
+EXPOSE 80
 
 # Define entry for setup contrab
 ENTRYPOINT ["/entrypoint"]
